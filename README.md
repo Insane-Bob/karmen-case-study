@@ -41,8 +41,8 @@ Ce projet est un POC comprenant:
 - Approbation/Rejet des demandes de financement
 - Capture optionnelle de raison de rejet
 - Persistance des décisions en localStorage (mock mode)
-- État synchronisé avec l'interface (local storage)
-
+- État synchronisé avec l'interface
+  
 ### Système de Conversations
 
 - Conversation par demande de financement
