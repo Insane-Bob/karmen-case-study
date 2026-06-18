@@ -35,6 +35,7 @@ import {
   formatFinancingRequestStatus,
   formatFinancingRequestType,
   riskStyles,
+  statusStyles,
 } from "@/lib/financing-display";
 import type {
   FinancingApplication,
@@ -75,7 +76,7 @@ function getNextSort(direction: SortDirection): SortDirection {
   return "none";
 }
 
-export default function Demandes() {
+export default function FinancingApplications() {
   const [data, setData] = useState<FinancingApplication[]>([]);
   const [loading, setLoading] = useState(true);
   const [decisionSubmitting, setDecisionSubmitting] = useState(false);
@@ -199,7 +200,9 @@ export default function Demandes() {
     <TooltipProvider>
       <div className="w-full space-y-6 px-6 py-6">
         <div className="flex flex-col gap-2">
-          <h1 className="text-3xl font-semibold tracking-tight">Demandes</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">
+            FinancingApplications
+          </h1>
           <p className="text-sm text-muted-foreground">
             Toutes les demandes renvoyees par le systeme automatique de
             pre-evaluation de risque.
@@ -331,7 +334,14 @@ export default function Demandes() {
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="inline-flex items-center gap-1.5 cursor-help">
-                                <Badge variant="secondary">
+                                <Badge
+                                  className={
+                                    statusStyles[
+                                      application.financing_request.status
+                                    ]
+                                  }
+                                  variant="outline"
+                                >
                                   {formatFinancingRequestStatus(
                                     application.financing_request.status,
                                   )}
@@ -345,7 +355,12 @@ export default function Demandes() {
                             </TooltipContent>
                           </Tooltip>
                         ) : (
-                          <Badge variant="secondary">
+                          <Badge
+                            className={
+                              statusStyles[application.financing_request.status]
+                            }
+                            variant="outline"
+                          >
                             {formatFinancingRequestStatus(
                               application.financing_request.status,
                             )}
@@ -381,7 +396,7 @@ export default function Demandes() {
                           ) : null}
                           <Button asChild size="sm" variant="outline">
                             <Link
-                              to={`/demandes/${application.financing_request.id}`}
+                              to={`/financing-applications/${application.financing_request.id}`}
                             >
                               Ouvrir
                             </Link>

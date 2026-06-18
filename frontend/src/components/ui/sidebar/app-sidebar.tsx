@@ -3,7 +3,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupAction,
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
@@ -12,14 +11,18 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { FileText, Home, Settings, Sparkles } from "lucide-react";
+import { FileText, Home, Sparkles } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { label: "Dashboard", icon: Home, href: "/dashboard" },
-  { label: "Demandes", icon: FileText, href: "/demandes" },
+  {
+    label: "Demandes financements",
+    icon: FileText,
+    href: "/financing-applications",
+  },
 ];
 
 export function AppSidebar() {
@@ -49,7 +52,9 @@ export function AppSidebar() {
             <SidebarMenu>
               {navItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.href;
+                const isActive =
+                  location.pathname === item.href ||
+                  location.pathname.startsWith(`${item.href}/`);
 
                 return (
                   <SidebarMenuItem key={item.label}>
@@ -71,7 +76,9 @@ export function AppSidebar() {
         <div className="flex items-center justify-between rounded-xl border bg-background p-3 shadow-sm">
           <div className="text-sm">
             <div className="font-medium">John Doe</div>
-            <div className="text-xs text-muted-foreground">Analyste financier</div>
+            <div className="text-xs text-muted-foreground">
+              Analyste financier
+            </div>
           </div>
         </div>
       </SidebarFooter>

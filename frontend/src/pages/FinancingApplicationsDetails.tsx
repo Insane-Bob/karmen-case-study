@@ -32,6 +32,7 @@ import {
   formatFinancingRequestStatus,
   formatFinancingRequestType,
   riskStyles,
+  statusStyles,
 } from "@/lib/financing-display";
 import type {
   ConversationWithMessages,
@@ -60,7 +61,7 @@ import {
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-export default function DemandeDetail() {
+export default function FinancingApplicationsDetails() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -268,7 +269,7 @@ export default function DemandeDetail() {
           </CardHeader>
         </Card>
         <Button asChild variant="outline">
-          <Link to="/demandes">
+          <Link to="/financing-applications">
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             Retour aux demandes
           </Link>
@@ -292,7 +293,7 @@ export default function DemandeDetail() {
           </CardHeader>
         </Card>
         <Button asChild variant="outline">
-          <Link to="/demandes">
+          <Link to="/financing-applications">
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             Retour aux demandes
           </Link>
@@ -312,7 +313,7 @@ export default function DemandeDetail() {
           size="sm"
           className="-ml-2 text-muted-foreground hover:text-foreground"
         >
-          <Link to="/demandes">
+          <Link to="/financing-applications">
             <ArrowLeft className="mr-1.5 h-4 w-4" />
             Retour aux demandes
           </Link>
@@ -327,7 +328,7 @@ export default function DemandeDetail() {
             disabled={!previousRequestId}
             onClick={() => {
               if (previousRequestId) {
-                navigate(`/demandes/${previousRequestId}`);
+                navigate(`/financing-applications/${previousRequestId}`);
               }
             }}
           >
@@ -346,7 +347,7 @@ export default function DemandeDetail() {
             disabled={!nextRequestId}
             onClick={() => {
               if (nextRequestId) {
-                navigate(`/demandes/${nextRequestId}`);
+                navigate(`/financing-applications/${nextRequestId}`);
               }
             }}
           >
@@ -388,23 +389,85 @@ export default function DemandeDetail() {
         </TabsList>
 
         <TabsContent value="synthese" className="space-y-6 pt-2">
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
               Demande {financing_request.id}
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-semibold tracking-tight">
-                {company.name}
+                {formatFinancingRequestType(company.name)}
               </h1>
-              <Badge variant="secondary" className="font-normal">
+              <Badge
+                className={statusStyles[financing_request.status]}
+                variant="outline"
+              >
                 {formatFinancingRequestStatus(financing_request.status)}
               </Badge>
             </div>
-            <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
-              <Building2 className="h-3.5 w-3.5" />
-              {company.businessType} · SIREN {company.siren}
-            </p>
+
+            <Card className="overflow-hidden p-0">
+              <div className="grid grid-cols-2 divide-y sm:grid-cols-6 sm:divide-x sm:divide-y-0">
+                <KpiCell
+                  icon={Wallet}
+                  label="Montant"
+                  value={formatCurrencyEur(financing_request.amount)}
+                />
+                <KpiCell
+                  icon={Calendar}
+                  label="Duree"
+                  value={`${financing_request.durationInMonth} mois`}
+                />
+                <KpiCell
+                  icon={Percent}
+                  label="Taux"
+                  value={`${financing_request.interestRate.toFixed(1)} %`}
+                />
+                <KpiCell
+                  icon={Tag}
+                  label="Type"
+                  value={formatFinancingRequestType(financing_request.type)}
+                />
+                <KpiCell
+                  icon={Calendar}
+                  label="Usage des fonds"
+                  value={formatFinancingRequestType(
+                    financing_request.fundUsage,
+                  )}
+                />
+              </div>
+            </Card>
           </div>
+
+          <Card className="border-primary/20">
+            <CardHeader>
+              <CardTitle>Informations entreprise</CardTitle>
+              <CardDescription>
+                Donnees legales et operationnelles au premier plan.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <InfoRow icon={Building2} label="Nom" value={company.name} />
+                <InfoRow icon={Hash} label="SIREN" value={company.siren} />
+                <InfoRow
+                  icon={Briefcase}
+                  label="Activite"
+                  value={company.businessType}
+                />
+                <InfoRow
+                  icon={Tag}
+                  label="Categorie"
+                  value={company.legalCategory}
+                />
+                <InfoRow
+                  icon={MapPin}
+                  label="Adresse"
+                  value={`${company.address}, ${company.postalCode}`}
+                />
+                <InfoRow icon={User} label="Dirigeant" value={company.owner} />
+              </div>
+            </CardContent>
+          </Card>
 
           {financing_request.status === "rejected" &&
           financing_request.rejectedReason ? (
@@ -423,43 +486,7 @@ export default function DemandeDetail() {
             </Card>
           ) : null}
 
-          <Card className="overflow-hidden p-0">
-            <div className="grid grid-cols-2 divide-y sm:grid-cols-4 sm:divide-x sm:divide-y-0">
-              <KpiCell
-                icon={Wallet}
-                label="Montant"
-                value={formatCurrencyEur(financing_request.amount)}
-              />
-              <KpiCell
-                icon={Calendar}
-                label="Duree"
-                value={`${financing_request.durationInMonth} mois`}
-              />
-              <KpiCell
-                icon={Percent}
-                label="Taux"
-                value={`${financing_request.interestRate.toFixed(1)} %`}
-              />
-              <KpiCell
-                icon={Tag}
-                label="Type"
-                value={formatFinancingRequestType(financing_request.type)}
-              />
-            </div>
-          </Card>
-
           <div className="grid gap-4 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle className="text-base">Usage des fonds</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="border-l-2 border-primary/30 pl-4 text-sm leading-relaxed text-foreground/90">
-                  {financing_request.fundUsage}
-                </p>
-              </CardContent>
-            </Card>
-
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">
@@ -479,45 +506,8 @@ export default function DemandeDetail() {
                 </Badge>
               </CardContent>
             </Card>
-          </div>
 
-          <div className="grid gap-4 xl:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Societe</CardTitle>
-                <CardDescription>
-                  Donnees legales et operationnelles.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <InfoRow icon={Building2} label="Nom" value={company.name} />
-                  <InfoRow icon={Hash} label="SIREN" value={company.siren} />
-                  <InfoRow
-                    icon={Briefcase}
-                    label="Activite"
-                    value={company.businessType}
-                  />
-                  <InfoRow
-                    icon={Tag}
-                    label="Categorie"
-                    value={company.legalCategory}
-                  />
-                  <InfoRow
-                    icon={MapPin}
-                    label="Adresse"
-                    value={`${company.address}, ${company.postalCode}`}
-                  />
-                  <InfoRow
-                    icon={User}
-                    label="Dirigeant"
-                    value={company.owner}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
+            <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle>Documents associes</CardTitle>
                 <CardDescription>
@@ -720,7 +710,7 @@ function KpiCell({
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="text-xl font-semibold tracking-tight tabular-nums">
+      <p className="text-lg font-semibold tracking-tight tabular-nums whitespace-pre">
         {value}
       </p>
     </div>
@@ -810,4 +800,3 @@ function ScoreGauge({
     </div>
   );
 }
-
