@@ -11,6 +11,17 @@ export const riskStyles: Record<RiskBucket, string> = {
     high: "uppercase bg-rose-500/10 text-rose-700 border-rose-500/20",
 };
 
+export const statusStyles: Record<FinancingRequestStatus, string> = {
+    pending_review:
+        "bg-sky-500/10 text-sky-700 border-sky-500/20 dark:text-sky-300",
+    approved:
+        "bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300",
+    rejected:
+        "bg-rose-500/10 text-rose-700 border-rose-500/20 dark:text-rose-300",
+    in_progress:
+        "bg-violet-500/10 text-violet-700 border-violet-500/20 dark:text-violet-300",
+};
+
 export function formatCurrencyEur(amount: number): string {
     return `${amount.toLocaleString("fr-FR")} €`;
 }
