@@ -64,6 +64,12 @@ Ce projet est un POC comprenant:
 - Node.js 20+
 - npm 10+
 
+### Installation du projet
+
+```bash
+npm run install:all
+```
+
 ### Lancer toute la stack
 
 ```bash
