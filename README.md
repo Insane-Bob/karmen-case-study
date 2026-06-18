@@ -149,7 +149,7 @@ karmen-case-study/
 
 ### Variables d'environnement (Frontend)
 
-**`.env.local`** (création automatique):
+**`.env`**
 
 ```
 VITE_API_BASE_URL=/api
