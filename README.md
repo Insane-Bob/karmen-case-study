@@ -1,4 +1,4 @@
-# Karmen Case Study - Application de Gestion des Demandes de Financement
+# Karmen Case Study
 
 POC afin de gérer les demandes de financement avec une interface pour les analystes financiers.
 
