@@ -139,7 +139,6 @@ karmen-case-study/
 │   │   │   └── financing-decisions.ts # localStorage overlay
 │   │   └── main.tsx
 │   ├── vite.config.ts          # Proxy API config
-│   ├── .env.local              # Config locale
 │   ├── .env.example            # Template
 │   └── package.json
 │
