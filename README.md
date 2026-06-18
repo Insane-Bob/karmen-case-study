@@ -161,6 +161,8 @@ VITE_API_PROXY_TARGET=http://localhost:3000
 
 Voir `.env.example` pour la documentation complète.
 
+PS : Un fallback côté front assure l'affichage des données si jamais le .env n'est pas configuré
+
 ## 📚 Endpoints API
 
 ### Financing Applications
