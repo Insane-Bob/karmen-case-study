@@ -46,6 +46,7 @@ import {
   Briefcase,
   Building2,
   Calendar,
+  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   FileQuestion,
@@ -55,9 +56,11 @@ import {
   MessageSquare,
   Percent,
   Send,
+  ShieldAlert,
   Tag,
   User,
   Wallet,
+  XCircle,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
@@ -146,6 +149,7 @@ export default function FinancingApplicationsDetails() {
       : undefined;
 
   const isClientActionRequired = conversation?.status === "open";
+  const isDecisionPending = application?.financing_request.status === "pending_review";
 
   async function toggleConversationStatus(nextStatus: "open" | "closed") {
     if (!application) {
@@ -238,17 +242,23 @@ export default function FinancingApplicationsDetails() {
           <div className="h-8 w-44 animate-pulse rounded-md bg-muted" />
           <div className="h-8 w-28 animate-pulse rounded-md bg-muted" />
         </div>
-        <div className="space-y-2">
-          <div className="h-3 w-40 animate-pulse rounded bg-muted" />
-          <div className="h-8 w-72 animate-pulse rounded bg-muted" />
-        </div>
-        <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="space-y-2 bg-card p-4">
-              <div className="h-3 w-16 animate-pulse rounded bg-muted" />
-              <div className="h-6 w-20 animate-pulse rounded bg-muted" />
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            <div className="space-y-3 rounded-xl border bg-card p-5">
+              <div className="h-3 w-32 animate-pulse rounded bg-muted" />
+              <div className="h-8 w-72 animate-pulse rounded bg-muted" />
+              <div className="h-3 w-48 animate-pulse rounded bg-muted" />
             </div>
-          ))}
+            <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border sm:grid-cols-5">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <div key={index} className="space-y-2 bg-card p-4">
+                  <div className="h-3 w-16 animate-pulse rounded bg-muted" />
+                  <div className="h-6 w-20 animate-pulse rounded bg-muted" />
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="h-64 animate-pulse rounded-lg border bg-card" />
         </div>
         <div className="h-40 animate-pulse rounded-lg border bg-card" />
         <div className="h-40 animate-pulse rounded-lg border bg-card" />
@@ -288,7 +298,7 @@ export default function FinancingApplicationsDetails() {
               <CardTitle>Demande introuvable</CardTitle>
             </div>
             <CardDescription>
-              Aucune demande ne correspond à cet identifiant.
+              Aucune demande ne correspond a cet identifiant.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -356,93 +366,150 @@ export default function FinancingApplicationsDetails() {
         </div>
       </div>
 
-      {financing_request.status === "pending_review" ? (
-        <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => {
-              setDecisionAction("approve");
-              setDecisionModalOpen(true);
-            }}
-          >
-            Approuver
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="destructive"
-            onClick={() => {
-              setDecisionAction("reject");
-              setDecisionModalOpen(true);
-            }}
-          >
-            Refuser
-          </Button>
+      {/* Always-visible summary: identity, key figures, risk and decision.
+          Lives outside the tabs so it stays on screen no matter which tab is active. */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="space-y-4 lg:col-span-4">
+          <Card>
+            <CardContent className="space-y-1.5 pt-6">
+              <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                Demande {financing_request.id}
+              </p>
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {company.name}
+                </h1>
+                <Badge
+                  className={statusStyles[financing_request.status]}
+                  variant="outline"
+                >
+                  {formatFinancingRequestStatus(financing_request.status)}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {company.businessType} · SIREN {company.siren}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden p-0">
+            <div className="grid grid-cols-2 divide-y sm:grid-cols-5 sm:divide-x sm:divide-y-0">
+              <KpiCell
+                icon={Wallet}
+                label="Montant"
+                value={formatCurrencyEur(financing_request.amount)}
+                emphasize
+              />
+              <KpiCell
+                icon={Calendar}
+                label="Duree"
+                value={`${financing_request.durationInMonth} mois`}
+              />
+              <KpiCell
+                icon={Percent}
+                label="Taux"
+                value={`${financing_request.interestRate.toFixed(1)} %`}
+              />
+              <KpiCell
+                icon={Tag}
+                label="Type"
+                value={formatFinancingRequestType(financing_request.type)}
+              />
+              <KpiCell
+                icon={Calendar}
+                label="Usage des fonds"
+                value={formatFinancingRequestType(
+                  financing_request.fundUsage,
+                )}
+              />
+            </div>
+          </Card>
         </div>
-      ) : null}
 
-      <Tabs defaultValue="synthese" className="w-full">
-        <TabsList>
-          <TabsTrigger value="synthese">Synthese demande</TabsTrigger>
-          <TabsTrigger value="conversation">Conversation</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="synthese" className="space-y-6 pt-2">
-          <div className="space-y-2">
-            <p className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Demande {financing_request.id}
-            </p>
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-semibold tracking-tight">
-                {formatFinancingRequestType(company.name)}
-              </h1>
+        <Card className="flex flex-col">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldAlert className="h-4 w-4" />
+              Evaluation du risque
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-1 flex-col items-center justify-between gap-4 pt-2">
+            <div className="flex flex-col items-center gap-3">
+              <ScoreGauge
+                score={score.global_score}
+                riskBucket={score.risk_bucket}
+              />
               <Badge
-                className={statusStyles[financing_request.status]}
+                className={riskStyles[score.risk_bucket]}
                 variant="outline"
               >
-                {formatFinancingRequestStatus(financing_request.status)}
+                {score.risk_bucket}
               </Badge>
             </div>
 
-            <Card className="overflow-hidden p-0">
-              <div className="grid grid-cols-2 divide-y sm:grid-cols-6 sm:divide-x sm:divide-y-0">
-                <KpiCell
-                  icon={Wallet}
-                  label="Montant"
-                  value={formatCurrencyEur(financing_request.amount)}
-                />
-                <KpiCell
-                  icon={Calendar}
-                  label="Duree"
-                  value={`${financing_request.durationInMonth} mois`}
-                />
-                <KpiCell
-                  icon={Percent}
-                  label="Taux"
-                  value={`${financing_request.interestRate.toFixed(1)} %`}
-                />
-                <KpiCell
-                  icon={Tag}
-                  label="Type"
-                  value={formatFinancingRequestType(financing_request.type)}
-                />
-                <KpiCell
-                  icon={Calendar}
-                  label="Usage des fonds"
-                  value={formatFinancingRequestType(
-                    financing_request.fundUsage,
-                  )}
-                />
-              </div>
-            </Card>
-          </div>
+            <div className="w-full border-t pt-4">
+              {isDecisionPending ? (
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setDecisionAction("approve");
+                      setDecisionModalOpen(true);
+                    }}
+                  >
+                    <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                    Approuver
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => {
+                      setDecisionAction("reject");
+                      setDecisionModalOpen(true);
+                    }}
+                  >
+                    <XCircle className="mr-1.5 h-4 w-4" />
+                    Refuser
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-center text-sm text-muted-foreground">
+                  Decision : {formatFinancingRequestStatus(financing_request.status)}
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <Card className="border-primary/20">
+      <Tabs defaultValue="synthese" className="w-full">
+        <TabsList>
+          <TabsTrigger value="synthese">
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            Synthese demande
+          </TabsTrigger>
+          <TabsTrigger value="conversation" className="relative">
+            <MessageSquare className="mr-1.5 h-3.5 w-3.5" />
+            Conversation
+            {isClientActionRequired ? (
+              <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+              </span>
+            ) : null}
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="synthese" className="space-y-6 pt-2">
+          <Card>
             <CardHeader>
               <CardTitle>Informations entreprise</CardTitle>
               <CardDescription>
-                Donnees legales et operationnelles au premier plan.
+                Donnees legales et operationnelles de la societe.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -486,67 +553,45 @@ export default function FinancingApplicationsDetails() {
             </Card>
           ) : null}
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">
-                  Evaluation du risque
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="flex flex-col items-center gap-3 pt-2">
-                <ScoreGauge
-                  score={score.global_score}
-                  riskBucket={score.risk_bucket}
-                />
-                <Badge
-                  className={riskStyles[score.risk_bucket]}
-                  variant="outline"
-                >
-                  {score.risk_bucket}
-                </Badge>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Documents associes</CardTitle>
-                <CardDescription>
-                  {documents.length} document(s) lies a cette demande.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {documents.length === 0 ? (
-                  <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-8 text-center">
-                    <FileQuestion className="h-6 w-6 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Aucun document n'a encore ete depose pour cette demande.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {documents.map((document) => (
-                      <div
-                        key={document.id}
-                        className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary/40 hover:bg-accent/40"
-                      >
-                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                          <FileText className="h-4 w-4" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">
-                            {document.name}
-                          </p>
-                          <p className="text-xs capitalize text-muted-foreground">
-                            {formatDocumentType(document.type)}
-                          </p>
-                        </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Documents associes</CardTitle>
+              <CardDescription>
+                {documents.length} document(s) lies a cette demande.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {documents.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-8 text-center">
+                  <FileQuestion className="h-6 w-6 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    Aucun document n'a encore ete depose pour cette demande.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {documents.map((document) => (
+                    <div
+                      key={document.id}
+                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:border-primary/40 hover:bg-accent/40"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                        <FileText className="h-4 w-4" />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {document.name}
+                        </p>
+                        <p className="text-xs capitalize text-muted-foreground">
+                          {formatDocumentType(document.type)}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="conversation" className="pt-2">
@@ -596,8 +641,13 @@ export default function FinancingApplicationsDetails() {
                     return (
                       <div
                         key={message.id}
-                        className={`flex ${isAnalyst ? "justify-end" : "justify-start"}`}
+                        className={`flex items-end gap-2 ${isAnalyst ? "justify-end" : "justify-start"}`}
                       >
+                        {!isAnalyst ? (
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+                            <User className="h-3.5 w-3.5" />
+                          </div>
+                        ) : null}
                         <div
                           className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                             isAnalyst
@@ -615,6 +665,11 @@ export default function FinancingApplicationsDetails() {
                             )}
                           </p>
                         </div>
+                        {isAnalyst ? (
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                            <Briefcase className="h-3.5 w-3.5" />
+                          </div>
+                        ) : null}
                       </div>
                     );
                   })
@@ -699,18 +754,24 @@ function KpiCell({
   icon: Icon,
   label,
   value,
+  emphasize = false,
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
+  emphasize?: boolean;
 }) {
   return (
-    <div className="flex flex-col gap-1.5 bg-card p-4">
+    <div
+      className={`flex flex-col gap-1.5 p-4 ${emphasize ? "bg-primary/5" : "bg-card"}`}
+    >
       <div className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
         <Icon className="h-3.5 w-3.5" />
         {label}
       </div>
-      <p className="text-lg font-semibold tracking-tight tabular-nums whitespace-pre">
+      <p
+        className={`text-sm font-semibold tracking-tight tabular-nums ${emphasize ? "text-primary" : ""}`}
+      >
         {value}
       </p>
     </div>

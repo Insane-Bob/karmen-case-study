@@ -15,6 +15,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -39,6 +47,7 @@ import {
 } from "@/lib/financing-display";
 import type {
   FinancingApplication,
+  FinancingRequestStatus,
   RiskBucket,
 } from "@/types/financing-applications";
 import { Info } from "lucide-react";
@@ -58,11 +67,24 @@ type DecisionModalState = {
   companyName: string;
 };
 
+type FilterStatus = FinancingRequestStatus | "all";
+type FilterRisk = RiskBucket | "all";
+
 const riskRank: Record<RiskBucket, number> = {
   low: 1,
   medium: 2,
   high: 3,
 };
+
+const statusFilterOptions: FilterStatus[] = [
+  "all",
+  "pending_review",
+  "in_progress",
+  "approved",
+  "rejected",
+];
+
+const riskFilterOptions: FilterRisk[] = ["all", "low", "medium", "high"];
 
 function getNextSort(direction: SortDirection): SortDirection {
   if (direction === "none") {
@@ -88,14 +110,59 @@ export default function FinancingApplications() {
   });
   const [scoreSort, setScoreSort] = useState<SortDirection>("none");
   const [riskSort, setRiskSort] = useState<SortDirection>("none");
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
+  const [riskFilter, setRiskFilter] = useState<FilterRisk>("all");
+  const [scoreMinFilter, setScoreMinFilter] = useState("");
+  const [scoreMaxFilter, setScoreMaxFilter] = useState("");
 
   const rows: RequestTableRow[] = data.map((application) => ({
     ...application,
     documentCount: application.documents.length,
   }));
 
+  const filteredRows = useMemo(() => {
+    const minScore =
+      scoreMinFilter.trim() === "" ? null : Number(scoreMinFilter.trim());
+    const maxScore =
+      scoreMaxFilter.trim() === "" ? null : Number(scoreMaxFilter.trim());
+
+    return rows.filter((application) => {
+      if (
+        statusFilter !== "all" &&
+        application.financing_request.status !== statusFilter
+      ) {
+        return false;
+      }
+
+      if (
+        riskFilter !== "all" &&
+        application.score.risk_bucket !== riskFilter
+      ) {
+        return false;
+      }
+
+      if (
+        minScore !== null &&
+        Number.isFinite(minScore) &&
+        application.score.global_score < minScore
+      ) {
+        return false;
+      }
+
+      if (
+        maxScore !== null &&
+        Number.isFinite(maxScore) &&
+        application.score.global_score > maxScore
+      ) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [rows, riskFilter, scoreMaxFilter, scoreMinFilter, statusFilter]);
+
   const sortedRows = useMemo(() => {
-    const currentRows = [...rows];
+    const currentRows = [...filteredRows];
 
     if (scoreSort !== "none") {
       currentRows.sort((a, b) => {
@@ -115,7 +182,7 @@ export default function FinancingApplications() {
     }
 
     return currentRows;
-  }, [rows, riskSort, scoreSort]);
+  }, [filteredRows, riskSort, scoreSort]);
 
   const scoreSortIndicator =
     scoreSort === "asc" ? "↑" : scoreSort === "desc" ? "↓" : "↕";
@@ -185,7 +252,7 @@ export default function FinancingApplications() {
               ...application.financing_request,
               status: nextStatus,
               rejectedReason: payload.rejectedReason,
-            }
+            },
           };
         }),
       );
@@ -218,6 +285,74 @@ export default function FinancingApplications() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <div className="mb-4 grid gap-3 md:grid-cols-4">
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium text-foreground">Statut</span>
+                <Select
+                  value={statusFilter}
+                  onValueChange={(value) =>
+                    setStatusFilter(value as FilterStatus)
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Tous les statuts" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {statusFilterOptions.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {status === "all"
+                          ? "Tous les statuts"
+                          : formatFinancingRequestStatus(status)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium text-foreground">Risque</span>
+                <Select
+                  value={riskFilter}
+                  onValueChange={(value) => setRiskFilter(value as FilterRisk)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Tous les risques" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {riskFilterOptions.map((risk) => (
+                      <SelectItem key={risk} value={risk}>
+                        {risk === "all" ? "Tous les risques" : risk}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium text-foreground">Score min</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="0"
+                  value={scoreMinFilter}
+                  onChange={(event) => setScoreMinFilter(event.target.value)}
+                />
+              </label>
+
+              <label className="flex flex-col gap-1.5 text-sm">
+                <span className="font-medium text-foreground">Score max</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  placeholder="100"
+                  value={scoreMaxFilter}
+                  onChange={(event) => setScoreMaxFilter(event.target.value)}
+                />
+              </label>
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
@@ -267,13 +402,13 @@ export default function FinancingApplications() {
                       Chargement des donnees...
                     </TableCell>
                   </TableRow>
-                ) : data.length === 0 ? (
+                ) : sortedRows.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={8}
                       className="py-8 text-center text-muted-foreground"
                     >
-                      Aucune demande disponible.
+                      Aucune demande ne correspond aux filtres selectionnes.
                     </TableCell>
                   </TableRow>
                 ) : (
