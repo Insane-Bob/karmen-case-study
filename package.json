@@ -1,0 +1,10 @@
+{
+  "name": "karmen-case-study",
+  "private": true,
+  "scripts": {
+    "start:backend": "echo '[INFO] Demarrage du backend (http://localhost:3000)' && npm --prefix backend run start:dev",
+    "start:frontend": "echo '[INFO] Demarrage du frontend (http://localhost:5173)' && npm --prefix frontend run dev",
+    "start:all": "sh -c \"echo '[INFO] Demarrage de toute la stack...'; npm run start:backend & npm run start:frontend\"",
+    "install:all": "npm --prefix backend install && npm --prefix frontend install"
+  }
+}
