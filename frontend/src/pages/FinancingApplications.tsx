@@ -185,7 +185,7 @@ export default function FinancingApplications() {
               ...application.financing_request,
               status: nextStatus,
               rejectedReason: payload.rejectedReason,
-            },
+            }
           };
         }),
       );
@@ -201,7 +201,7 @@ export default function FinancingApplications() {
       <div className="w-full space-y-6 px-6 py-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-semibold tracking-tight">
-            FinancingApplications
+            Demandes de financement
           </h1>
           <p className="text-sm text-muted-foreground">
             Toutes les demandes renvoyees par le systeme automatique de

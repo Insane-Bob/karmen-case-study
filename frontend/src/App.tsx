@@ -18,14 +18,6 @@ function App() {
           path="/financing-applications/:id"
           element={<FinancingApplicationsDetails />}
         />
-        <Route
-          path="/demandes"
-          element={<Navigate to="/financing-applications" replace />}
-        />
-        <Route
-          path="/demandes/:id"
-          element={<FinancingApplicationsDetails />}
-        />
       </Route>
     </Routes>
   );
